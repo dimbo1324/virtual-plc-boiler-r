@@ -305,7 +305,7 @@ staticfiles/
 # Binaries and build outputs
 # ignore bin/ and pkg/ at repo root (common)
 bin/
-pkg/
+# pkg/
 out/
 build/
 dist/
