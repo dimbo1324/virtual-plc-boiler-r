@@ -1,7 +1,5 @@
 import asyncio
 import time
-from typing import Tuple
-
 from app.core.simulator import BoilerSimulator
 from app.scenarios.demo import get_demo_controls
 
@@ -13,8 +11,8 @@ async def run_demo_console_simulation(
 ):
 
     print("╔════════════════════════════════════════════╗")
-    print("║     ЗАПУСК ДЕМОНСТРАЦИОННОЙ СИМУЛЯЦИИ      ║")
-    print("║          (Ctrl+C для остановки)            ║")
+    print("║      STARTING DEMO SIMULATION MODE         ║")
+    print("║           Press Ctrl+C to stop             ║")
     print("╚════════════════════════════════════════════╝\n")
 
     simulator.set_controls(fuel=0.0, water=30.0, steam=0.0)

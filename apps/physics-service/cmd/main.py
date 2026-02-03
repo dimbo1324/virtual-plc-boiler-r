@@ -17,7 +17,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("\n--- СИМУЛЯЦИЯ ОСТАНОВЛЕНА ---")
+        print("\nSIMULATION STOPPED")
     except Exception as e:
-        print(f"Критическая ошибка: {e}", file=sys.stderr)
+        print(f"Critical error: {e}", file=sys.stderr)
         sys.exit(1)
