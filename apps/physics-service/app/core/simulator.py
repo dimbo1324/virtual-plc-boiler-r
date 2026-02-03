@@ -1,5 +1,5 @@
 import time
-from app import settings
+from app.settings import settings
 from app.core.state import BoilerInputs, BoilerOutputs, BoilerState
 from app.core.steam_table import SteamTable
 

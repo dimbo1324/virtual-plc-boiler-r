@@ -22,7 +22,7 @@ async def run_simulation():
             state = sim.get_state()
 
             current_loop_time = asyncio.get_running_loop().time() - start_time
-            step = 10
+            step = 1
 
             if 0 < current_loop_time < step:
                 sim.set_controls(fuel=50.0, water=10.0, steam=0.0)
@@ -48,7 +48,7 @@ async def run_simulation():
             )
             print(output)
 
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1)
 
     except KeyboardInterrupt:
         print("\n--- СИМУЛЯЦИЯ ОСТАНОВЛЕНА ---")
