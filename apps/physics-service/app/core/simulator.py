@@ -16,7 +16,7 @@ class BoilerSimulator:
         self.inputs.feedwater_valve = max(0, 0, min(100.0, water))
         self.inputs.steam_valve = max(0, 0, min(100.0, steam))
 
-    def get_state(self):
+    def get_state(self) -> BoilerState:
         # Returns a snapshot of the current system state
         return BoilerState(
             timestamp=time.time(), inputs=self.inputs, outputs=self.outputs
@@ -49,7 +49,7 @@ class BoilerSimulator:
                 (target_temp - self.outputs.furnace_temp) * settings.COOLING_RATE * dt
             )
         self.outputs.furnace_temp += change
-        
+
         # -----
         # ----- 2. Pressure calculation -----
         # -----
@@ -61,7 +61,7 @@ class BoilerSimulator:
         pressure_loss = self.inputs.steam_valve * settings.PRESSURE_DROP_RATE * dt
         # The final pressure (cannot be less than 0)
         self.outputs.steam_pressure = max(0.0, base_pressure - pressure_loss)
-        
+
         # -----
         # ----- 3. Steam flow calculation -----
         # -----
@@ -69,7 +69,7 @@ class BoilerSimulator:
         self.outputs.steam_flow = (
             self.outputs.steam_pressure / settings.MAX_PRESSURE
         ) * self.inputs.steam_valve
-        
+
         # -----
         # ----- 4. Water level calculation -----
         # -----
