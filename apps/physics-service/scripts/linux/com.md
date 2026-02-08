@@ -1,0 +1,1 @@
+chmod +x apps/physics-service/scripts/linux/*.sh
