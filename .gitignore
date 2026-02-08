@@ -309,7 +309,7 @@ bin/
 out/
 build/
 dist/
-debug/
+# debug/
 tmp/
 *.test
 
