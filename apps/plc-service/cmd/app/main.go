@@ -1,7 +1,19 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 func main() {
-	fmt.Println(2 + 2)
+	fmt.Println("PLC Service Started")
+
+	go func() {
+		ticker := time.NewTicker(100 * time.Millisecond)
+		for range ticker.C {
+			fmt.Println("Tick...")
+		}
+	}()
+
+	select {}
 }
