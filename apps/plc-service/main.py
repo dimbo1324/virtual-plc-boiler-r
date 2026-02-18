@@ -1,1 +1,0 @@
-print ("plc-service, HELLO!")
