@@ -1,4 +1,5 @@
 syntax = "proto3";
+option go_package = "plc-service/pkg/grpc";
 package boiler;
 
 service BoilerPhysics {
