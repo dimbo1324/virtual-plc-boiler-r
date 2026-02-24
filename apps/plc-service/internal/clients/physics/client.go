@@ -10,11 +10,20 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
+type IPhysicsClient interface {
+	GetStatus(ctx context.Context) (*pb.BoilerStatus, error)
+	SetControls(ctx context.Context, fuel, water, steam float64) (*pb.BoilerStatus, error)
+	Close() error
+}
+
+var _ IPhysicsClient = (*BoilerClient)(nil)
+
 type BoilerClient struct {
 	conn   *grpc.ClientConn
 	client pb.BoilerPhysicsClient
 }
 
+// --------------------------------------------------
 func NewClient(address string) (*BoilerClient, error) {
 	conn, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
