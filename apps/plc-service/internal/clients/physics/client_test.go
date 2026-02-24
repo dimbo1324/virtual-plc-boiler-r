@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
 func TestMockPhysicsClient_Interaction(t *testing.T) {
 	mockClient := new(MockPhysicsClient)
 	mockClient.On("GetStatus", mock.Anything).Return(&pb.BoilerStatus{

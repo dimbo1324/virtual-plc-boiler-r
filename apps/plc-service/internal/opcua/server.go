@@ -53,7 +53,7 @@ func (s *Server) Start(ctx context.Context) error {
 	s.flowNode = ua.NewNumericNodeID(uint16(nsIdx), 1006)
 	boilerNode.AddVariable(server.NewVariableNode(s.flowNode, "SteamFlow", 0.0))
 
-	log.Printf("📡 OPC UA Server starting on %v...", s.srv.URLs())
+	log.Printf("OPC UA Server starting on %v...", s.srv.URLs())
 	return s.srv.Start(ctx)
 }
 

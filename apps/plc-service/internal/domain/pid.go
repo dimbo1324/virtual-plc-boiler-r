@@ -21,13 +21,10 @@ func NewPID(kp, ki, kd float64) *PIDController {
 		maxOut: 100.0,
 	}
 }
-
 func (pid *PIDController) Update(setpoint, pv, dt float64) float64 {
 	err := setpoint - pv
 	P := pid.Kp * err
-
 	pid.integral += err * dt
-
 	if pid.Ki != 0 {
 		if pid.Ki*pid.integral > pid.maxOut {
 			pid.integral = pid.maxOut / pid.Ki
@@ -35,15 +32,10 @@ func (pid *PIDController) Update(setpoint, pv, dt float64) float64 {
 			pid.integral = pid.minOut / pid.Ki
 		}
 	}
-
 	I := pid.Ki * pid.integral
-
 	derivative := (err - pid.prevError) / dt
 	D := pid.Kd * derivative
-
 	pid.prevError = err
-
 	output := P + I + D
-
 	return math.Max(pid.minOut, math.Min(pid.maxOut, output))
 }
