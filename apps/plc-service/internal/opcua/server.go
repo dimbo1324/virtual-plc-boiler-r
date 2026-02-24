@@ -21,7 +21,7 @@ type Server struct {
 
 func NewServer(port int) *Server {
 	srv := server.New(
-		server.EndPoint("opc.tcp://0.0.0.0", port),
+		server.EndPoint("0.0.0.0", port),
 		server.ServerName("Virtual Boiler PLC"),
 	)
 	return &Server{srv: srv}
@@ -31,27 +31,23 @@ func (s *Server) Start(ctx context.Context) error {
 	s.ns = server.NewNameSpace("urn:virtual-plc:boiler")
 	nsIdx := s.srv.AddNamespace(s.ns)
 
-	boilerID := ua.NewNumericNodeID(uint16(nsIdx), 1000)
-	boilerNode := server.NewFolderNode(boilerID, "Boiler")
-	s.ns.AddNode(boilerNode)
-
 	s.pressNode = ua.NewNumericNodeID(uint16(nsIdx), 1001)
-	boilerNode.AddVariable(server.NewVariableNode(s.pressNode, "Pressure", 0.0))
+	s.ns.AddNode(server.NewVariableNode(s.pressNode, "Pressure", 0.0))
 
 	s.tempNode = ua.NewNumericNodeID(uint16(nsIdx), 1002)
-	boilerNode.AddVariable(server.NewVariableNode(s.tempNode, "Temperature", 0.0))
+	s.ns.AddNode(server.NewVariableNode(s.tempNode, "Temperature", 0.0))
 
 	s.fuelNode = ua.NewNumericNodeID(uint16(nsIdx), 1003)
-	boilerNode.AddVariable(server.NewVariableNode(s.fuelNode, "FuelValve", 0.0))
+	s.ns.AddNode(server.NewVariableNode(s.fuelNode, "FuelValve", 0.0))
 
 	s.setpointNode = ua.NewNumericNodeID(uint16(nsIdx), 1004)
-	boilerNode.AddVariable(server.NewVariableNode(s.setpointNode, "Setpoint", 60.0))
+	s.ns.AddNode(server.NewVariableNode(s.setpointNode, "Setpoint", 60.0))
 
 	s.levelNode = ua.NewNumericNodeID(uint16(nsIdx), 1005)
-	boilerNode.AddVariable(server.NewVariableNode(s.levelNode, "DrumLevel", 500.0))
+	s.ns.AddNode(server.NewVariableNode(s.levelNode, "DrumLevel", 500.0))
 
 	s.flowNode = ua.NewNumericNodeID(uint16(nsIdx), 1006)
-	boilerNode.AddVariable(server.NewVariableNode(s.flowNode, "SteamFlow", 0.0))
+	s.ns.AddNode(server.NewVariableNode(s.flowNode, "SteamFlow", 0.0))
 
 	log.Printf("OPC UA Server starting on %v...", s.srv.URLs())
 	return s.srv.Start(ctx)
