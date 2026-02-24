@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
 func TestPIDController_Update_Proportional(t *testing.T) {
 	pid := NewPID(2.0, 0.0, 0.0)
 	tests := []struct {

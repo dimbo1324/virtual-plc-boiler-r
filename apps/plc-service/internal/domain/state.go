@@ -1,6 +1,7 @@
 package domain
 
 import "time"
+
 type State struct {
 	Timestamp     time.Time
 	FurnaceTemp   float64
