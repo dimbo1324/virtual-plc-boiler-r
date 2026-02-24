@@ -5,10 +5,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
-
 func TestPIDController_Update_Proportional(t *testing.T) {
 	pid := NewPID(2.0, 0.0, 0.0)
-
 	tests := []struct {
 		name     string
 		setpoint float64
@@ -45,7 +43,6 @@ func TestPIDController_Update_Proportional(t *testing.T) {
 			expected: 0.0,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output := pid.Update(tt.setpoint, tt.pv, tt.dt)
@@ -53,13 +50,10 @@ func TestPIDController_Update_Proportional(t *testing.T) {
 		})
 	}
 }
-
 func TestPIDController_Update_Integral(t *testing.T) {
 	pid := NewPID(0.0, 1.0, 0.0)
-
 	out1 := pid.Update(60.0, 50.0, 1.0)
 	assert.InDelta(t, 10.0, out1, 0.001)
-
 	out2 := pid.Update(60.0, 50.0, 1.0)
 	assert.InDelta(t, 20.0, out2, 0.001)
 }

@@ -18,14 +18,8 @@ _runtime_version.ValidateProtobufRuntimeVersion(
     'proto/boiler.proto'
 )
 # @@protoc_insertion_point(imports)
-
 _sym_db = _symbol_database.Default()
-
-
-
-
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12proto/boiler.proto\x12\x06\x62oiler\"\x07\n\x05\x45mpty\"w\n\x0c\x42oilerStatus\x12\x11\n\ttimestamp\x18\x01 \x01(\x01\x12\x14\n\x0c\x66urnace_temp\x18\x02 \x01(\x01\x12\x16\n\x0esteam_pressure\x18\x03 \x01(\x01\x12\x12\n\ndrum_level\x18\x04 \x01(\x01\x12\x12\n\nsteam_flow\x18\x05 \x01(\x01\"P\n\x0c\x43ontrolInput\x12\x12\n\nfuel_valve\x18\x01 \x01(\x01\x12\x17\n\x0f\x66\x65\x65\x64water_valve\x18\x02 \x01(\x01\x12\x13\n\x0bsteam_valve\x18\x03 \x01(\x01\x32|\n\rBoilerPhysics\x12\x30\n\tGetStatus\x12\r.boiler.Empty\x1a\x14.boiler.BoilerStatus\x12\x39\n\x0bSetControls\x12\x14.boiler.ControlInput\x1a\x14.boiler.BoilerStatusb\x06proto3')
-
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'proto.boiler_pb2', _globals)

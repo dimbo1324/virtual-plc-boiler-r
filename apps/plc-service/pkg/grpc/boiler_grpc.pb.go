@@ -3,7 +3,6 @@
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             v6.33.5
 // source: boiler.proto
-
 package grpc
 
 import (
@@ -18,12 +17,10 @@ import (
 // is compatible with the grpc package it is being compiled against.
 // Requires gRPC-Go v1.64.0 or later.
 const _ = grpc.SupportPackageIsVersion9
-
 const (
 	BoilerPhysics_GetStatus_FullMethodName   = "/boiler.BoilerPhysics/GetStatus"
 	BoilerPhysics_SetControls_FullMethodName = "/boiler.BoilerPhysics/SetControls"
 )
-
 // BoilerPhysicsClient is the client API for BoilerPhysics service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
@@ -31,15 +28,12 @@ type BoilerPhysicsClient interface {
 	GetStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BoilerStatus, error)
 	SetControls(ctx context.Context, in *ControlInput, opts ...grpc.CallOption) (*BoilerStatus, error)
 }
-
 type boilerPhysicsClient struct {
 	cc grpc.ClientConnInterface
 }
-
 func NewBoilerPhysicsClient(cc grpc.ClientConnInterface) BoilerPhysicsClient {
 	return &boilerPhysicsClient{cc}
 }
-
 func (c *boilerPhysicsClient) GetStatus(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*BoilerStatus, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BoilerStatus)
@@ -49,7 +43,6 @@ func (c *boilerPhysicsClient) GetStatus(ctx context.Context, in *Empty, opts ...
 	}
 	return out, nil
 }
-
 func (c *boilerPhysicsClient) SetControls(ctx context.Context, in *ControlInput, opts ...grpc.CallOption) (*BoilerStatus, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(BoilerStatus)
@@ -59,7 +52,6 @@ func (c *boilerPhysicsClient) SetControls(ctx context.Context, in *ControlInput,
 	}
 	return out, nil
 }
-
 // BoilerPhysicsServer is the server API for BoilerPhysics service.
 // All implementations must embed UnimplementedBoilerPhysicsServer
 // for forward compatibility.
@@ -68,14 +60,12 @@ type BoilerPhysicsServer interface {
 	SetControls(context.Context, *ControlInput) (*BoilerStatus, error)
 	mustEmbedUnimplementedBoilerPhysicsServer()
 }
-
 // UnimplementedBoilerPhysicsServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
 type UnimplementedBoilerPhysicsServer struct{}
-
 func (UnimplementedBoilerPhysicsServer) GetStatus(context.Context, *Empty) (*BoilerStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetStatus not implemented")
 }
@@ -84,14 +74,12 @@ func (UnimplementedBoilerPhysicsServer) SetControls(context.Context, *ControlInp
 }
 func (UnimplementedBoilerPhysicsServer) mustEmbedUnimplementedBoilerPhysicsServer() {}
 func (UnimplementedBoilerPhysicsServer) testEmbeddedByValue()                       {}
-
 // UnsafeBoilerPhysicsServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to BoilerPhysicsServer will
 // result in compilation errors.
 type UnsafeBoilerPhysicsServer interface {
 	mustEmbedUnimplementedBoilerPhysicsServer()
 }
-
 func RegisterBoilerPhysicsServer(s grpc.ServiceRegistrar, srv BoilerPhysicsServer) {
 	// If the following call panics, it indicates UnimplementedBoilerPhysicsServer was
 	// embedded by pointer and is nil.  This will cause panics if an
@@ -102,7 +90,6 @@ func RegisterBoilerPhysicsServer(s grpc.ServiceRegistrar, srv BoilerPhysicsServe
 	}
 	s.RegisterService(&BoilerPhysics_ServiceDesc, srv)
 }
-
 func _BoilerPhysics_GetStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Empty)
 	if err := dec(in); err != nil {
@@ -120,7 +107,6 @@ func _BoilerPhysics_GetStatus_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	return interceptor(ctx, in, info, handler)
 }
-
 func _BoilerPhysics_SetControls_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ControlInput)
 	if err := dec(in); err != nil {
@@ -138,7 +124,6 @@ func _BoilerPhysics_SetControls_Handler(srv interface{}, ctx context.Context, de
 	}
 	return interceptor(ctx, in, info, handler)
 }
-
 // BoilerPhysics_ServiceDesc is the grpc.ServiceDesc for BoilerPhysics service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)

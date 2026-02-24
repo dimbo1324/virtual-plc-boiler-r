@@ -1,8 +1,6 @@
 from app.core.state import BoilerInputs, BoilerOutputs, BoilerState
 from app.settings import Settings
 import time
-
-
 def test_dataclasses_default_values():
     inp = BoilerInputs()
     out = BoilerOutputs()
@@ -12,8 +10,6 @@ def test_dataclasses_default_values():
     assert isinstance(state.timestamp, float)
     assert state.inputs is inp
     assert state.outputs is out
-
-
 def test_settings_from_env(monkeypatch):
     monkeypatch.setenv("BOILER_HEATING_RATE", "0.5")
     settings = Settings()

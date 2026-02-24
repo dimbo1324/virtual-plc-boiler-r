@@ -12,7 +12,6 @@ type PIDController struct {
 	minOut    float64 // Минимальный выход (0%)
 	maxOut    float64 // Максимальный выход (100%)
 }
-
 // NewPID создает новый регулятор
 func NewPID(kp, ki, kd float64) *PIDController {
 	return &PIDController{
@@ -23,7 +22,6 @@ func NewPID(kp, ki, kd float64) *PIDController {
 		maxOut: 100.0,
 	}
 }
-
 /*
 Update рассчитывает управляющее воздействие.
 setpoint - целевое значение (например, 60 бар)
@@ -32,17 +30,12 @@ dt - время в секундах, прошедшее с прошлого ра
 */
 func (pid *PIDController) Update(setpoint, pv, dt float64) float64 {
 	err := setpoint - pv
-
 	P := pid.Kp * err
-
 	pid.integral += err * dt
 	I := pid.Ki * pid.integral
-
 	derivative := (err - pid.prevError) / dt
 	D := pid.Kd * derivative
-
 	pid.prevError = err
 	output := P + I + D
-
 	return math.Max(pid.minOut, math.Min(pid.maxOut, output))
 }

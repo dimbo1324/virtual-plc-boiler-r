@@ -1,11 +1,8 @@
 import asyncio
 import time
 from typing import Tuple
-
 from app.core.simulator import BoilerSimulator
 from app.scenarios.demo import get_demo_controls
-
-
 async def run_demo_console_simulation(
     simulator: BoilerSimulator,
     update_interval: float = 1.0,
@@ -13,7 +10,6 @@ async def run_demo_console_simulation(
 ):
     """
     Runs the demo simulation in console mode with periodic state printing.
-
     Args:
         simulator: Instance of BoilerSimulator to control
         update_interval: How often to print state (seconds)
@@ -23,25 +19,19 @@ async def run_demo_console_simulation(
     print("║      STARTING DEMO SIMULATION MODE         ║")
     print("║           Press Ctrl+C to stop             ║")
     print("╚════════════════════════════════════════════╝\n")
-
     # Initial safe state
     simulator.set_controls(fuel=0.0, water=30.0, steam=0.0)
-
     start_time = time.time()
     last_print_time = start_time
-
     try:
         while True:
             # Update physics model
             simulator.tick()
             state = simulator.get_state()
-
             now = time.time()
             elapsed = now - start_time
-
             # Get control actions from demo scenario
             status, fuel, water, steam = get_demo_controls(elapsed, step_duration)
-
             # Apply controls only if they changed (optimization)
             if (fuel, water, steam) != (
                 state.inputs.fuel_valve,
@@ -49,7 +39,6 @@ async def run_demo_console_simulation(
                 state.inputs.steam_valve,
             ):
                 simulator.set_controls(fuel=fuel, water=water, steam=steam)
-
             # Print state only at specified intervals
             if now - last_print_time >= update_interval:
                 print(
@@ -65,9 +54,7 @@ async def run_demo_console_simulation(
                     f"Flow {state.outputs.steam_flow:>5.1f} "
                 )
                 last_print_time = now
-
             # Small sleep to keep loop responsive and CPU-friendly
             await asyncio.sleep(0.1)
-
     except KeyboardInterrupt:
         raise  # Let main handle the shutdown message

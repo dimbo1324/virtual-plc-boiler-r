@@ -1,15 +1,11 @@
 from typing import List, Tuple
-
-
 class SteamTable:
     """
     Static lookup table for approximate steam pressure based on temperature.
-
     This is a simplified linear interpolation table for saturated steam pressure
     (approximation of real steam tables for simulation purposes).
     Data points are in °C and bar.
     """
-
     _DATA: List[Tuple[float, float]] = [
         (0.0, 0.0061),
         (20.0, 0.0234),
@@ -57,33 +53,25 @@ class SteamTable:
         (1000.0, 400.0),
         (1500.0, 500.0),
     ]
-
     @staticmethod
     def get_pressure(temp_c: float) -> float:
         """
         Returns approximate saturated steam pressure for given temperature using linear interpolation.
-
         Args:
             temp_c: Temperature in Celsius
-
         Returns:
             Pressure in bar (clamped to table range)
-
         Note: This is a linear approximation between data points.
               For temperatures below min or above max, returns edge values.
         """
         data = SteamTable._DATA
-
         if temp_c <= data[0][0]:
             return data[0][1]
-
         for i in range(len(data) - 1):
             t1, p1 = data[i]
             t2, p2 = data[i + 1]
-
             if t1 <= temp_c <= t2:
                 ratio = (temp_c - t1) / (t2 - t1)
                 pressure = p1 + (p2 - p1) * ratio
                 return pressure
-
         return data[-1][1]

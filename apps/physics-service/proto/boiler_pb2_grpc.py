@@ -2,19 +2,15 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 import warnings
-
 from proto import boiler_pb2 as proto_dot_boiler__pb2
-
 GRPC_GENERATED_VERSION = '1.76.0'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
-
 try:
     from grpc._utilities import first_version_is_lower
     _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
 except ImportError:
     _version_not_supported = True
-
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
@@ -23,14 +19,10 @@ if _version_not_supported:
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
     )
-
-
 class BoilerPhysicsStub(object):
     """Missing associated documentation comment in .proto file."""
-
     def __init__(self, channel):
         """Constructor.
-
         Args:
             channel: A grpc.Channel.
         """
@@ -44,24 +36,18 @@ class BoilerPhysicsStub(object):
                 request_serializer=proto_dot_boiler__pb2.ControlInput.SerializeToString,
                 response_deserializer=proto_dot_boiler__pb2.BoilerStatus.FromString,
                 _registered_method=True)
-
-
 class BoilerPhysicsServicer(object):
     """Missing associated documentation comment in .proto file."""
-
     def GetStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
-
     def SetControls(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
-
-
 def add_BoilerPhysicsServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetStatus': grpc.unary_unary_rpc_method_handler(
@@ -79,12 +65,9 @@ def add_BoilerPhysicsServicer_to_server(servicer, server):
             'boiler.BoilerPhysics', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
     server.add_registered_method_handlers('boiler.BoilerPhysics', rpc_method_handlers)
-
-
  # This class is part of an EXPERIMENTAL API.
 class BoilerPhysics(object):
     """Missing associated documentation comment in .proto file."""
-
     @staticmethod
     def GetStatus(request,
             target,
@@ -111,7 +94,6 @@ class BoilerPhysics(object):
             timeout,
             metadata,
             _registered_method=True)
-
     @staticmethod
     def SetControls(request,
             target,

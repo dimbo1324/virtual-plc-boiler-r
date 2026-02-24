@@ -11,14 +11,12 @@ import (
 	"syscall"
 	"time"
 )
-
 type Telemetry struct {
 	Pressure float64
 	Temp     float64
 	Fuel     float64
 	Setpoint float64
 }
-
 func main() {
 	log.Println("PLC Service Starting...")
 	client, err := physics.NewClient("localhost:50051")
@@ -86,6 +84,5 @@ func main() {
 	log.Println("Shutting down PLC Service...")
 	opcServer.Stop()
 }
-
 // ^\s*\r?\n
 // ^[ \t]+

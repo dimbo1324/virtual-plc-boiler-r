@@ -7,7 +7,6 @@ import (
 	"github.com/gopcua/opcua/server"
 	"github.com/gopcua/opcua/ua"
 )
-
 type Server struct {
 	srv          *server.Server
 	ns           server.NameSpace
@@ -16,46 +15,35 @@ type Server struct {
 	fuelNode     *ua.NodeID
 	setpointNode *ua.NodeID
 }
-
 func NewServer(port int) *Server {
 	srv := server.New(
 		server.EndPoint("opc.tcp://0.0.0.0", port),
 		server.ServerName("Virtual Boiler PLC"),
 	)
-
 	return &Server{srv: srv}
 }
-
 func (s *Server) Start(ctx context.Context) error {
 	s.ns = server.NewNameSpace("urn:virtual-plc:boiler")
 	nsIdx := s.srv.AddNamespace(s.ns)
-
 	boilerID := ua.NewNumericNodeID(uint16(nsIdx), 1000)
 	boilerNode := server.NewFolderNode(boilerID, "Boiler")
 	s.ns.AddNode(boilerNode)
-
 	s.pressNode = ua.NewNumericNodeID(uint16(nsIdx), 1001)
 	boilerNode.AddVariable(server.NewVariableNode(s.pressNode, "Pressure", 0.0))
-
 	s.tempNode = ua.NewNumericNodeID(uint16(nsIdx), 1002)
 	boilerNode.AddVariable(server.NewVariableNode(s.tempNode, "Temperature", 0.0))
-
 	s.fuelNode = ua.NewNumericNodeID(uint16(nsIdx), 1003)
 	boilerNode.AddVariable(server.NewVariableNode(s.fuelNode, "FuelValve", 0.0))
-
 	s.setpointNode = ua.NewNumericNodeID(uint16(nsIdx), 1004)
 	boilerNode.AddVariable(server.NewVariableNode(s.setpointNode, "Setpoint", 60.0))
-
 	log.Printf("📡 OPC UA Server starting on %v...", s.srv.URLs())
 	return s.srv.Start(ctx)
 }
-
 func (s *Server) Stop() {
 	if s.srv != nil {
 		s.srv.Close()
 	}
 }
-
 func (s *Server) UpdateData(pressure, temp, fuel, setpoint float64) {
 	update := func(nid *ua.NodeID, value float64) {
 		if nid == nil {
@@ -68,7 +56,6 @@ func (s *Server) UpdateData(pressure, temp, fuel, setpoint float64) {
 			n.SetAttribute(ua.AttributeIDValue, dv)
 		}
 	}
-
 	update(s.pressNode, pressure)
 	update(s.tempNode, temp)
 	update(s.fuelNode, fuel)
