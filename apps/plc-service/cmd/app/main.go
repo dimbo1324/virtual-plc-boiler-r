@@ -2,93 +2,90 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
-	"syscall"
-	"time"
-
 	"plc-service/internal/clients/physics"
 	"plc-service/internal/domain"
+	"plc-service/internal/opcua"
+	"syscall"
+	"time"
 )
 
-const (
-	PhysicsAddress = "localhost:50051"
-	TargetPressure = 60.0
-	TargetLevel    = 500.0
-)
+type Telemetry struct {
+	Pressure float64
+	Temp     float64
+	Fuel     float64
+	Setpoint float64
+}
 
 func main() {
 	log.Println("PLC Service Starting...")
-
-	physClient, err := physics.NewClient(PhysicsAddress)
+	client, err := physics.NewClient("localhost:50051")
 	if err != nil {
-		log.Fatalf("Failed to connect to physics: %v", err)
+		log.Fatalf("Failed to connect to Physics: %v", err)
 	}
-	defer physClient.Close()
-	log.Println("Connected to Physics Engine")
-
-	pressurePID := domain.NewPID(5.0, 0.1, 10.0)
-
+	defer client.Close()
+	pid := domain.NewPID(5.0, 0.2, 1.0)
+	opcServer := opcua.NewServer(4840)
+	telemetryChan := make(chan Telemetry, 1)
 	ctx, cancel := context.WithCancel(context.Background())
-
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
+	defer cancel()
 	go func() {
-		ticker := time.NewTicker(100 * time.Millisecond)
+		if err := opcServer.Start(ctx); err != nil {
+			log.Printf("OPC UA Error: %v", err)
+		}
+	}()
+	go func() {
+		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
-
-		var lastTime = time.Now()
-
+		setpoint := 60.0
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case t := <-ticker.C:
-				dt := t.Sub(lastTime).Seconds()
-				lastTime = t
-
-				status, err := physClient.GetStatus(ctx)
+			case <-ticker.C:
+				status, err := client.GetStatus(ctx)
 				if err != nil {
-					log.Printf("Error reading sensors: %v", err)
+					log.Printf("Error getting status: %v", err)
 					continue
 				}
-
-				fuelCmd := pressurePID.Update(TargetPressure, status.SteamPressure, dt)
-
-				levelError := TargetLevel - status.DrumLevel
-				waterCmd := 50.0 + (levelError * 0.5)
-
-				if waterCmd > 100 {
-					waterCmd = 100
-				}
-				if waterCmd < 0 {
-					waterCmd = 0
-				}
-
+				fuelCmd := pid.Update(setpoint, status.SteamPressure, 1.0)
 				steamCmd := 0.0
-				if status.Timestamp > 20.0 {
-					steamCmd = 40.0
+				if status.Timestamp > 10.0 {
+					steamCmd = 30.0
 				}
-
-				_, err = physClient.SetControls(ctx, fuelCmd, waterCmd, steamCmd)
-				if err != nil {
-					log.Printf("Error writing controls: %v", err)
+				if _, err := client.SetControls(ctx, fuelCmd, 50.0, steamCmd); err != nil {
+					log.Printf("Error setting controls: %v", err)
 				}
-
-				if t.UnixMilli()%1000 < 100 {
-					fmt.Printf("[PLC] T: %.1fs | Press: %.2f Bar (Set: %.0f) | Fuel: %.1f%% | Level: %.0f mm | Flow: %.1f\n",
-						status.Timestamp, status.SteamPressure, TargetPressure, fuelCmd, status.DrumLevel, status.SteamFlow)
+				select {
+				case telemetryChan <- Telemetry{
+					Pressure: status.SteamPressure,
+					Temp:     status.FurnaceTemp,
+					Fuel:     fuelCmd,
+					Setpoint: setpoint,
+				}:
+				default:
 				}
 			}
 		}
 	}()
-
-	<-sigChan
-	log.Println("\nShutting down PLC...")
-	cancel()
-	time.Sleep(500 * time.Millisecond)
-	log.Println("Bye!")
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case data := <-telemetryChan:
+				opcServer.UpdateData(data.Pressure, data.Temp, data.Fuel, data.Setpoint)
+			}
+		}
+	}()
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+	<-stop
+	log.Println("Shutting down PLC Service...")
+	opcServer.Stop()
 }
+
+// ^\s*\r?\n
+// ^[ \t]+

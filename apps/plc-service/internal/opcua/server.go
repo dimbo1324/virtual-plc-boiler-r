@@ -2,7 +2,6 @@ package opcua
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/gopcua/opcua/server"
@@ -11,6 +10,7 @@ import (
 
 type Server struct {
 	srv          *server.Server
+	ns           server.NameSpace
 	pressNode    *ua.NodeID
 	tempNode     *ua.NodeID
 	fuelNode     *ua.NodeID
@@ -18,53 +18,59 @@ type Server struct {
 }
 
 func NewServer(port int) *Server {
-	endpoint := fmt.Sprintf("opc.tcp://localhost:%d", port)
-
-	s := server.New(
-		server.ListenAddr(fmt.Sprintf(":%d", port)),
-		server.EnableReflection(true),
-		server.MaxMessageSize(65535),
+	srv := server.New(
+		server.EndPoint("opc.tcp://0.0.0.0", port),
+		server.ServerName("Virtual Boiler PLC"),
 	)
 
-	return &Server{srv: s}
+	return &Server{srv: srv}
 }
 
 func (s *Server) Start(ctx context.Context) error {
-	nm := s.srv.NamespaceManager()
-	ns, err := nm.Register("urn:virtual-plc:boiler")
-	if err != nil {
-		return err
-	}
+	s.ns = server.NewNameSpace("urn:virtual-plc:boiler")
+	nsIdx := s.srv.AddNamespace(s.ns)
 
-	boilerID := ua.NewNumericNodeID(ns, 1000)
-	nm.AddObject(boilerID, "Boiler", ua.NewNumericNodeID(0, 85))
+	boilerID := ua.NewNumericNodeID(uint16(nsIdx), 1000)
+	boilerNode := server.NewFolderNode(boilerID, "Boiler")
+	s.ns.AddNode(boilerNode)
 
-	s.pressNode = ua.NewNumericNodeID(ns, 1001)
-	nm.AddVariable(s.pressNode, "Pressure", 0.0, boilerID)
+	s.pressNode = ua.NewNumericNodeID(uint16(nsIdx), 1001)
+	boilerNode.AddVariable(server.NewVariableNode(s.pressNode, "Pressure", 0.0))
 
-	s.tempNode = ua.NewNumericNodeID(ns, 1002)
-	nm.AddVariable(s.tempNode, "Temperature", 0.0, boilerID)
+	s.tempNode = ua.NewNumericNodeID(uint16(nsIdx), 1002)
+	boilerNode.AddVariable(server.NewVariableNode(s.tempNode, "Temperature", 0.0))
 
-	s.fuelNode = ua.NewNumericNodeID(ns, 1003)
-	nm.AddVariable(s.fuelNode, "FuelValve", 0.0, boilerID)
+	s.fuelNode = ua.NewNumericNodeID(uint16(nsIdx), 1003)
+	boilerNode.AddVariable(server.NewVariableNode(s.fuelNode, "FuelValve", 0.0))
 
-	s.setpointNode = ua.NewNumericNodeID(ns, 1004)
-	nm.AddVariable(s.setpointNode, "Setpoint", 60.0, boilerID)
+	s.setpointNode = ua.NewNumericNodeID(uint16(nsIdx), 1004)
+	boilerNode.AddVariable(server.NewVariableNode(s.setpointNode, "Setpoint", 60.0))
 
-	log.Printf("📡 OPC UA Server starting on port 4840...")
+	log.Printf("📡 OPC UA Server starting on %v...", s.srv.URLs())
 	return s.srv.Start(ctx)
 }
 
 func (s *Server) Stop() {
 	if s.srv != nil {
-		s.srv.Stop()
+		s.srv.Close()
 	}
 }
 
 func (s *Server) UpdateData(pressure, temp, fuel, setpoint float64) {
-	nm := s.srv.NamespaceManager()
-	nm.SetVariableValue(s.pressNode, ua.MustVariant(pressure))
-	nm.SetVariableValue(s.tempNode, ua.MustVariant(temp))
-	nm.SetVariableValue(s.fuelNode, ua.MustVariant(fuel))
-	nm.SetVariableValue(s.setpointNode, ua.MustVariant(setpoint))
+	update := func(nid *ua.NodeID, value float64) {
+		if nid == nil {
+			return
+		}
+		if n := s.srv.Node(nid); n != nil {
+			dv := &ua.DataValue{
+				Value: ua.MustVariant(value),
+			}
+			n.SetAttribute(ua.AttributeIDValue, dv)
+		}
+	}
+
+	update(s.pressNode, pressure)
+	update(s.tempNode, temp)
+	update(s.fuelNode, fuel)
+	update(s.setpointNode, setpoint)
 }
