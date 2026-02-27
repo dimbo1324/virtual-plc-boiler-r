@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"strings"
+
+	"github.com/spf13/viper"
+)
 
 type Config struct {
 	OPCUAEndpoint  string
@@ -23,6 +27,7 @@ func Load() *Config {
 	viper.SetDefault("buffer.size", 500)
 	viper.SetDefault("poll.interval_ms", 500)
 
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 
 	return &Config{
