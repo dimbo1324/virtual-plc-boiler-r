@@ -1,0 +1,4 @@
+USE_MOCKS=false
+OPCUA_ENDPOINT=opc.tcp://localhost:4840
+MQTT_BROKER=tcp://localhost:1883
+MQTT_CLIENT_ID=gw_01
