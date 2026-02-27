@@ -13,9 +13,7 @@ type Config struct {
 	PollIntervalMs int
 }
 
-var Load = load
-
-func load() *Config {
+func Load() *Config {
 	viper.SetDefault("opcua.endpoint", "opc.tcp://localhost:4840")
 	viper.SetDefault("mqtt.broker", "tcp://localhost:1883")
 	viper.SetDefault("mqtt.client_id", "gw_01")
@@ -24,7 +22,9 @@ func load() *Config {
 	viper.SetDefault("worker.count", 5)
 	viper.SetDefault("buffer.size", 500)
 	viper.SetDefault("poll.interval_ms", 500)
+
 	viper.AutomaticEnv()
+
 	return &Config{
 		OPCUAEndpoint:  viper.GetString("opcua.endpoint"),
 		MQTTBroker:     viper.GetString("mqtt.broker"),

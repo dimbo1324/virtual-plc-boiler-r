@@ -2,28 +2,17 @@ package main
 
 import (
 	"os"
-	"syscall"
+	"runtime"
 	"testing"
 	"time"
-
-	"gateway-service/internal/config"
 )
 
 func TestMainIntegration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("integration test skipped in short mode")
 	}
-
-	originalLoad := config.Load
-	defer func() { config.Load = originalLoad }()
-
-	config.Load = func() *config.Config {
-		return &config.Config{
-			UseMocks:       true,
-			WorkerCount:    2,
-			BufferSize:     20,
-			PollIntervalMs: 100,
-		}
+	if runtime.GOOS == "windows" {
+		t.Skip("TestMainIntegration: SIGTERM не поддерживается на Windows (используй Linux/Mac для полного теста)")
 	}
 
 	done := make(chan struct{})
@@ -39,14 +28,14 @@ func TestMainIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := p.Signal(syscall.SIGTERM); err != nil {
+	if err := p.Signal(os.Interrupt); err != nil {
 		t.Fatal(err)
 	}
 
 	select {
 	case <-done:
-		t.Log("Main exited cleanly")
+		t.Log("Main завершился корректно (graceful shutdown)")
 	case <-time.After(4 * time.Second):
-		t.Fatal("Timeout: main() не остановился после SIGTERM")
+		t.Fatal("Таймаут: main() не остановился после сигнала")
 	}
 }
