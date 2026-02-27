@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"sync"
 
@@ -32,13 +33,28 @@ func (p *Pool) Start(ctx context.Context, workersCount int) {
 
 func (p *Pool) worker(ctx context.Context, id int) {
 	defer p.wg.Done()
+	log.Printf("Worker %d: ready", id)
+
 	for {
 		select {
 		case <-ctx.Done():
 			log.Printf("Worker %d stopping...", id)
 			return
-		case job := <-p.jobsChan:
-			_ = job
+		case job, ok := <-p.jobsChan:
+			if !ok {
+				return
+			}
+
+			_, err := json.Marshal(job)
+			if err != nil {
+				log.Printf("Worker %d: error marshalling: %v", id, err)
+				continue
+			}
+
+			err = p.publisher.Publish("v1/devices/boiler/telemetry", job)
+			if err != nil {
+				log.Printf("Worker %d: publish error: %v", id, err)
+			}
 		}
 	}
 }
@@ -52,5 +68,7 @@ func (p *Pool) Push(payload domain.Payload) {
 }
 
 func (p *Pool) Stop() {
+	close(p.jobsChan)
 	p.wg.Wait()
+	log.Println("Worker pool stopped cleanly")
 }
