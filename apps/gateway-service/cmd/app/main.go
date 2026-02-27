@@ -2,52 +2,58 @@ package main
 
 import (
 	"context"
+	"gateway-service/internal/config"
 	"gateway-service/internal/domain"
 	"gateway-service/internal/mqtt"
 	"gateway-service/internal/opcua"
 	"gateway-service/internal/worker"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-)
 
-const (
-	USE_MOCKS    = true
-	WORKER_COUNT = 5
-	BUFFER_SIZE  = 100
+	"go.uber.org/zap"
 )
 
 func main() {
-	log.Printf("IIoT Gateway (Mocks=%v) starting...", USE_MOCKS)
+	cfg := config.Load()
+
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	sugar := logger.Sugar()
+
+	sugar.Infof("IIoT Gateway starting... (Mocks=%v)", cfg.UseMocks)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	var poller opcua.IPoller
-	var publisher mqtt.IPublisher
-
-	if USE_MOCKS {
-		poller = &opcua.MockPoller{}
-		publisher = &mqtt.MockPublisher{}
+	if cfg.UseMocks {
+		poller = opcua.NewMockPoller()
 	} else {
-		poller = opcua.NewOpcClient("opc.tcp://localhost:4840")
-		publisher = mqtt.NewMqttClient("tcp://localhost:1883", "gw_01")
+		poller = opcua.NewOpcClient(cfg.OPCUAEndpoint)
 	}
 
 	if err := poller.Connect(ctx); err != nil {
-		log.Fatalf("Poller error: %v", err)
-	}
-	if err := publisher.Connect(); err != nil {
-		log.Fatalf("Publisher error: %v", err)
+		sugar.Fatalf("Poller connect failed: %v", err)
 	}
 
-	pool := worker.NewPool(publisher, BUFFER_SIZE)
-	pool.Start(ctx, WORKER_COUNT)
+	var publisher mqtt.IPublisher
+	if cfg.UseMocks {
+		publisher = mqtt.NewMockPublisher()
+	} else {
+		publisher = mqtt.NewMqttClient(cfg.MQTTBroker, cfg.MQTTClientID)
+	}
+
+	if err := publisher.Connect(); err != nil {
+		sugar.Fatalf("MQTT connect failed: %v", err)
+	}
+
+	pool := worker.NewPool(publisher, cfg.BufferSize, logger)
+	pool.Start(ctx, cfg.WorkerCount)
 
 	go func() {
-		ticker := time.NewTicker(500 * time.Millisecond)
+		ticker := time.NewTicker(time.Duration(cfg.PollIntervalMs) * time.Millisecond)
 		defer ticker.Stop()
 
 		for {
@@ -57,7 +63,7 @@ func main() {
 			case t := <-ticker.C:
 				tags, err := poller.Read(ctx)
 				if err != nil {
-					log.Printf("Read error: %v", err)
+					sugar.Warnw("Read error", "err", err)
 					continue
 				}
 
@@ -66,7 +72,6 @@ func main() {
 					AssetID:   "boiler_01",
 					Tags:      tags,
 				}
-
 				pool.Push(payload)
 			}
 		}
@@ -76,9 +81,10 @@ func main() {
 	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
 	<-stop
 
-	log.Println("Shutting down...")
+	sugar.Info("Shutting down...")
 	cancel()
 	pool.Stop()
 	publisher.Close()
 	poller.Close()
+	sugar.Info("Gateway stopped cleanly")
 }
