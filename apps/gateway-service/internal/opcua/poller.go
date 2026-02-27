@@ -17,9 +17,15 @@ type IPoller interface {
 	Close() error
 }
 
+type opcuaClient interface {
+	Connect(ctx context.Context) error
+	Read(ctx context.Context, req *ua.ReadRequest) (*ua.ReadResponse, error)
+	Close(ctx context.Context) error
+}
+
 type OpcClient struct {
 	endpoint string
-	client   *opcua.Client
+	client   opcuaClient
 	logger   *zap.SugaredLogger
 }
 
