@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   mosquitto:
@@ -17,7 +17,7 @@ services:
 
   physics-service:
     build:
-      context: ./apps/physics-service
+      context: ./physics-service
       dockerfile: Dockerfile
     container_name: physics-service
     restart: unless-stopped
@@ -27,25 +27,32 @@ services:
       - boiler-net
     environment:
       - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 25s
 
   plc-service:
     build:
-      context: ./apps/plc-service
+      context: ./plc-service
       dockerfile: Dockerfile
     container_name: plc-service
     restart: unless-stopped
     ports:
       - "4840:4840"
     depends_on:
-      - physics-service
+      physics-service:
+        condition: service_healthy
     networks:
       - boiler-net
     environment:
-      - PHYSICS_ADDRESS=physics-service:50051
+      - PHYSICS_ADDR=physics-service:50051
 
   gateway-service:
     build:
-      context: ./apps/gateway-service
+      context: ./gateway-service
       dockerfile: Dockerfile
     container_name: gateway-service
     restart: unless-stopped
