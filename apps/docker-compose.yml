@@ -27,12 +27,8 @@ services:
       - boiler-net
     environment:
       - PYTHONUNBUFFERED=1
-    healthcheck:
-      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-      start_period: 25s
+    volumes:
+      - physics-venv:/app/.venv
 
   plc-service:
     build:
@@ -43,8 +39,7 @@ services:
     ports:
       - "4840:4840"
     depends_on:
-      physics-service:
-        condition: service_healthy
+      - physics-service
     networks:
       - boiler-net
     environment:
@@ -72,3 +67,6 @@ services:
 networks:
   boiler-net:
     driver: bridge
+
+volumes:
+  physics-venv:
