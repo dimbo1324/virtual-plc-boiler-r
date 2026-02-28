@@ -27,8 +27,16 @@ services:
       - boiler-net
     environment:
       - PYTHONUNBUFFERED=1
-    volumes:
-      - physics-venv:/app/.venv
+    healthcheck:
+      test: [
+          "CMD-SHELL",
+          "python -c \"import socket,sys; \
+          socket.create_connection(('127.0.0.1', 50051), timeout=2)\"",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
 
   plc-service:
     build:
@@ -38,12 +46,19 @@ services:
     restart: unless-stopped
     ports:
       - "4840:4840"
-    depends_on:
-      - physics-service
     networks:
       - boiler-net
     environment:
       - PHYSICS_ADDR=physics-service:50051
+    depends_on:
+      physics-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 4840 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
 
   gateway-service:
     build:
@@ -52,7 +67,10 @@ services:
     container_name: gateway-service
     restart: unless-stopped
     depends_on:
-      - plc-service
+      plc-service:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
     networks:
       - boiler-net
     environment:
@@ -67,6 +85,3 @@ services:
 networks:
   boiler-net:
     driver: bridge
-
-volumes:
-  physics-venv:
