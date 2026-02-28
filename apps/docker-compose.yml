@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    networks:
+      - boiler-net
+
+  physics-service:
+    build:
+      context: ./apps/physics-service
+      dockerfile: Dockerfile
+    container_name: physics-service
+    restart: unless-stopped
+    ports:
+      - "50051:50051"
+    networks:
+      - boiler-net
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  plc-service:
+    build:
+      context: ./apps/plc-service
+      dockerfile: Dockerfile
+    container_name: plc-service
+    restart: unless-stopped
+    ports:
+      - "4840:4840"
+    depends_on:
+      - physics-service
+    networks:
+      - boiler-net
+    environment:
+      - PHYSICS_ADDRESS=physics-service:50051
+
+  gateway-service:
+    build:
+      context: ./apps/gateway-service
+      dockerfile: Dockerfile
+    container_name: gateway-service
+    restart: unless-stopped
+    depends_on:
+      - plc-service
+    networks:
+      - boiler-net
+    environment:
+      - OPCUA_ENDPOINT=opc.tcp://plc-service:4840
+      - MQTT_BROKER=tcp://mosquitto:1883
+      - MQTT_CLIENT_ID=gw_01
+      - USE_MOCKS=false
+      - WORKER_COUNT=5
+      - BUFFER_SIZE=500
+      - POLL_INTERVAL_MS=500
+
+networks:
+  boiler-net:
+    driver: bridge
