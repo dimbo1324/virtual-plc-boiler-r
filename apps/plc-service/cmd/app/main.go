@@ -22,7 +22,11 @@ type Telemetry struct {
 
 func main() {
 	log.Println("PLC Service Starting...")
-	client, err := physics.NewClient("localhost:50051")
+	physicsAddr := os.Getenv("PHYSICS_ADDR")
+	if physicsAddr == "" {
+		physicsAddr = "localhost:50051"
+	}
+	client, err := physics.NewClient(physicsAddr)
 	if err != nil {
 		log.Fatalf("Failed to connect to Physics: %v", err)
 	}
