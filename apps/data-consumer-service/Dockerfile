@@ -5,6 +5,6 @@ COPY pyproject.toml uv.lock ./
 COPY src/ ./src/
 
 RUN pip install --no-cache-dir pip setuptools wheel \
-    && pip install --no-cache-dir .
+ && pip install --no-cache-dir .
 
 CMD ["python", "-m", "data_consumer.main"]
