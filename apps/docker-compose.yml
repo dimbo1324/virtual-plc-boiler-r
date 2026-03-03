@@ -114,9 +114,9 @@ services:
     depends_on:
       - influxdb
 
-  data-consumer:
-    build: ./data-consumer
-    container_name: data-consumer
+  data-consumer-service:
+    build: ./data-consumer-service
+    container_name: data-consumer-service
     restart: unless-stopped
     networks:
       - boiler-net
