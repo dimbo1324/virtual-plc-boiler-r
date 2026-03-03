@@ -77,7 +77,12 @@ func main() {
 				fuelCmd := pressurePid.Update(pressureSetpoint, status.SteamPressure, dt)
 				waterCmd := levelPid.Update(waterSetpoint, status.DrumLevel, dt)
 
+				startTime := time.Now()
+
 				steamCmd := 0.0
+				if time.Since(startTime).Seconds() > 10.0 {
+					steamCmd = 30.0
+				}
 				if status.Timestamp > 10.0 {
 					steamCmd = 30.0
 				}
