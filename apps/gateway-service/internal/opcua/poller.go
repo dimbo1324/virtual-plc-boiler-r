@@ -70,6 +70,9 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 		NodesToRead: []*ua.ReadValueID{
 			{NodeID: ua.NewNumericNodeID(2, 1002)},
 			{NodeID: ua.NewNumericNodeID(2, 1001)},
+			{NodeID: ua.NewNumericNodeID(2, 1003)},
+			{NodeID: ua.NewNumericNodeID(2, 1005)},
+			{NodeID: ua.NewNumericNodeID(2, 1006)},
 		},
 	}
 
@@ -82,6 +85,9 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 	return domain.Tags{
 		Temperature: resp.Results[0].Value.Float(),
 		Pressure:    resp.Results[1].Value.Float(),
+		Fuel:        resp.Results[2].Value.Float(),
+		DrumLevel:   resp.Results[3].Value.Float(),
+		SteamFlow:   resp.Results[4].Value.Float(),
 	}, nil
 }
 
