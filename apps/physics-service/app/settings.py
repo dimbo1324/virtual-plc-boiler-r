@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     AMBIENT_TEMP: float = 20.0  # Base ambient temperature (°C)
     MAX_FURNACE_TEMP: float = 1200.0  # Maximum achievable furnace temperature (°C)
     # Heating/cooling dynamics
-    HEATING_RATE: float = 0.8  # Temperature increase factor per second  !!!was 0.05!!!
+    HEATING_RATE: float = 0.05  # Temperature increase factor per second
     COOLING_RATE: float = 0.02  # Temperature decrease factor per second
     # Pressure related parameters
     MAX_PRESSURE: float = 100.0  # Maximum possible steam pressure (bar)

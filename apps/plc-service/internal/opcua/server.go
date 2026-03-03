@@ -31,11 +31,6 @@ func (s *Server) Start(ctx context.Context) error {
 	s.ns = server.NewNameSpace("urn:virtual-plc:boiler")
 	nsIdx := s.srv.AddNamespace(s.ns)
 
-	if nsIdx != 2 {
-		log.Printf("WARNING: namespace index was %d → forced to 2 for gateway compatibility", nsIdx)
-		nsIdx = 2
-	}
-
 	s.pressNode = ua.NewNumericNodeID(uint16(nsIdx), 1001)
 	s.ns.AddNode(server.NewVariableNode(s.pressNode, "Pressure", 0.0))
 
