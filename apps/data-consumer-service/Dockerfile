@@ -1,11 +1,10 @@
 FROM python:3.12-slim
-
 WORKDIR /app
 
-COPY pyproject.toml .
-RUN pip install --no-cache-dir uv && \
-    uv pip install --system -e .
-
+COPY pyproject.toml uv.lock ./
 COPY src/ ./src/
 
-CMD ["python", "/app/src/data_consumer/main.py"]
+RUN pip install --no-cache-dir pip setuptools wheel \
+    && pip install --no-cache-dir .
+
+CMD ["python", "-m", "data_consumer.main"]
