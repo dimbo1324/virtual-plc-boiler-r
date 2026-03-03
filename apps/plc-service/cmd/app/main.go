@@ -51,7 +51,7 @@ func main() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
-		lastTick := time.Now()
+		lastTick, startTime := time.Now(), time.Now()
 
 		for {
 			select {
@@ -76,8 +76,6 @@ func main() {
 
 				fuelCmd := pressurePid.Update(pressureSetpoint, status.SteamPressure, dt)
 				waterCmd := levelPid.Update(waterSetpoint, status.DrumLevel, dt)
-
-				startTime := time.Now()
 
 				steamCmd := 0.0
 				if time.Since(startTime).Seconds() > 10.0 {

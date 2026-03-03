@@ -68,11 +68,11 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 
 	req := &ua.ReadRequest{
 		NodesToRead: []*ua.ReadValueID{
-			{NodeID: ua.NewNumericNodeID(1, 1002)},
-			{NodeID: ua.NewNumericNodeID(1, 1001)},
-			{NodeID: ua.NewNumericNodeID(1, 1003)},
-			{NodeID: ua.NewNumericNodeID(1, 1005)},
-			{NodeID: ua.NewNumericNodeID(1, 1006)},
+			{NodeID: ua.NewNumericNodeID(1, 1002), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(1, 1001), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(1, 1003), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(1, 1005), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(1, 1006), AttributeID: ua.AttributeIDValue},
 		},
 	}
 
