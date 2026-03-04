@@ -16,13 +16,11 @@ type IPoller interface {
 	Read(ctx context.Context) (domain.Tags, error)
 	Close() error
 }
-
 type opcuaClient interface {
 	Connect(ctx context.Context) error
 	Read(ctx context.Context, req *ua.ReadRequest) (*ua.ReadResponse, error)
 	Close(ctx context.Context) error
 }
-
 type OpcClient struct {
 	endpoint string
 	client   opcuaClient
@@ -36,10 +34,8 @@ func NewOpcClient(endpoint string) *OpcClient {
 		logger:   logger.Sugar(),
 	}
 }
-
 func (c *OpcClient) Connect(ctx context.Context) error {
 	var err error
-
 	for i := 0; i < 5; i++ {
 		c.client, err = opcua.NewClient(c.endpoint)
 		if err != nil {
@@ -47,25 +43,20 @@ func (c *OpcClient) Connect(ctx context.Context) error {
 			time.Sleep(time.Duration(1<<uint(i)) * time.Second)
 			continue
 		}
-
 		if err = c.client.Connect(ctx); err == nil {
 			c.logger.Info("OPC UA connected successfully")
 			return nil
 		}
-
 		c.logger.Warnw("OPC UA connection failed, retrying...", "attempt", i+1, "err", err)
 		time.Sleep(time.Duration(1<<uint(i)) * time.Second)
 	}
-
 	c.logger.Error("All OPC UA connection attempts failed")
 	return err
 }
-
 func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 	if c.client == nil {
 		return domain.Tags{}, nil
 	}
-
 	req := &ua.ReadRequest{
 		NodesToRead: []*ua.ReadValueID{
 			{NodeID: ua.NewNumericNodeID(1, 1002), AttributeID: ua.AttributeIDValue},
@@ -75,13 +66,11 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 			{NodeID: ua.NewNumericNodeID(1, 1006), AttributeID: ua.AttributeIDValue},
 		},
 	}
-
 	resp, err := c.client.Read(ctx, req)
 	if err != nil {
 		c.logger.Warnw("OPC UA read failed", "err", err)
 		return domain.Tags{}, err
 	}
-
 	return domain.Tags{
 		Temperature: resp.Results[0].Value.Float(),
 		Pressure:    resp.Results[1].Value.Float(),
@@ -90,7 +79,6 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 		SteamFlow:   resp.Results[4].Value.Float(),
 	}, nil
 }
-
 func (c *OpcClient) Close() error {
 	if c.client != nil {
 		return c.client.Close(context.Background())
@@ -103,10 +91,8 @@ type MockPoller struct{}
 func NewMockPoller() *MockPoller {
 	return &MockPoller{}
 }
-
 func (m *MockPoller) Connect(ctx context.Context) error { return nil }
 func (m *MockPoller) Close() error                      { return nil }
-
 func (m *MockPoller) Read(ctx context.Context) (domain.Tags, error) {
 	return domain.Tags{
 		Temperature: 400.0 + rand.Float64()*120,
