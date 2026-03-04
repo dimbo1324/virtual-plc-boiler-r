@@ -2,6 +2,7 @@ package opcua
 
 import (
 	"context"
+	"fmt"
 	"gateway-service/internal/domain"
 	"math/rand"
 	"time"
@@ -59,16 +60,21 @@ func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 	}
 	req := &ua.ReadRequest{
 		NodesToRead: []*ua.ReadValueID{
-			{NodeID: ua.NewNumericNodeID(1, 1002), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(1, 1001), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(1, 1003), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(1, 1005), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(1, 1006), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(2, 1002), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(2, 1001), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(2, 1003), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(2, 1005), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(2, 1006), AttributeID: ua.AttributeIDValue},
 		},
 	}
 	resp, err := c.client.Read(ctx, req)
 	if err != nil {
-		c.logger.Warnw("OPC UA read failed", "err", err)
+		c.logger.Warnw("OPC UA read request failed", "err", err)
+		return domain.Tags{}, err
+	}
+	if resp.Results[0].Status != ua.StatusOK {
+		err := fmt.Errorf("bad node status: %v", resp.Results[0].Status)
+		c.logger.Warnw("OPC UA Node not found", "err", err)
 		return domain.Tags{}, err
 	}
 	return domain.Tags{
@@ -88,9 +94,7 @@ func (c *OpcClient) Close() error {
 
 type MockPoller struct{}
 
-func NewMockPoller() *MockPoller {
-	return &MockPoller{}
-}
+func NewMockPoller() *MockPoller                        { return &MockPoller{} }
 func (m *MockPoller) Connect(ctx context.Context) error { return nil }
 func (m *MockPoller) Close() error                      { return nil }
 func (m *MockPoller) Read(ctx context.Context) (domain.Tags, error) {
