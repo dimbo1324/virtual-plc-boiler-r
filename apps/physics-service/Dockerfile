@@ -13,4 +13,4 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY . .
 
-CMD ["uv", "run", "python", "-m", "physics.main"]
+CMD ["uv", "run", "python", "cmd/main.py"]
