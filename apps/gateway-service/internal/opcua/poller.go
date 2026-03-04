@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"gateway-service/internal/domain"
-	"math/rand"
-	"time"
 
 	"github.com/gopcua/opcua"
 	"github.com/gopcua/opcua/ua"
@@ -17,15 +15,11 @@ type IPoller interface {
 	Read(ctx context.Context) (domain.Tags, error)
 	Close() error
 }
-type opcuaClient interface {
-	Connect(ctx context.Context) error
-	Read(ctx context.Context, req *ua.ReadRequest) (*ua.ReadResponse, error)
-	Close(ctx context.Context) error
-}
 type OpcClient struct {
 	endpoint string
-	client   opcuaClient
+	client   *opcua.Client
 	logger   *zap.SugaredLogger
+	nsIndex  uint16
 }
 
 func NewOpcClient(endpoint string) *OpcClient {
@@ -37,45 +31,47 @@ func NewOpcClient(endpoint string) *OpcClient {
 }
 func (c *OpcClient) Connect(ctx context.Context) error {
 	var err error
-	for i := 0; i < 5; i++ {
-		c.client, err = opcua.NewClient(c.endpoint)
-		if err != nil {
-			c.logger.Warnw("Failed to create OPC UA client", "attempt", i+1, "err", err)
-			time.Sleep(time.Duration(1<<uint(i)) * time.Second)
-			continue
-		}
-		if err = c.client.Connect(ctx); err == nil {
-			c.logger.Info("OPC UA connected successfully")
-			return nil
-		}
-		c.logger.Warnw("OPC UA connection failed, retrying...", "attempt", i+1, "err", err)
-		time.Sleep(time.Duration(1<<uint(i)) * time.Second)
+	c.client, err = opcua.NewClient(c.endpoint, opcua.SecurityMode(ua.MessageSecurityModeNone))
+	if err != nil {
+		return err
 	}
-	c.logger.Error("All OPC UA connection attempts failed")
-	return err
+	if err = c.client.Connect(ctx); err != nil {
+		return err
+	}
+	namespaceURI := "urn:virtual-plc:boiler"
+	namespaces := c.client.Namespaces()
+	for i, uri := range namespaces {
+		if uri == namespaceURI {
+			c.nsIndex = uint16(i)
+			c.logger.Infof("Found namespace '%s' at index %d", namespaceURI, i)
+			break
+		}
+	}
+	if c.nsIndex == 0 {
+		c.logger.Warnf("Namespace '%s' not found, defaulting to index 2", namespaceURI)
+		c.nsIndex = 2
+	}
+	return nil
 }
 func (c *OpcClient) Read(ctx context.Context) (domain.Tags, error) {
 	if c.client == nil {
-		return domain.Tags{}, nil
+		return domain.Tags{}, fmt.Errorf("client not connected")
 	}
 	req := &ua.ReadRequest{
 		NodesToRead: []*ua.ReadValueID{
-			{NodeID: ua.NewNumericNodeID(2, 1002), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(2, 1001), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(2, 1003), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(2, 1005), AttributeID: ua.AttributeIDValue},
-			{NodeID: ua.NewNumericNodeID(2, 1006), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(c.nsIndex, 1002), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(c.nsIndex, 1001), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(c.nsIndex, 1003), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(c.nsIndex, 1005), AttributeID: ua.AttributeIDValue},
+			{NodeID: ua.NewNumericNodeID(c.nsIndex, 1006), AttributeID: ua.AttributeIDValue},
 		},
 	}
 	resp, err := c.client.Read(ctx, req)
 	if err != nil {
-		c.logger.Warnw("OPC UA read request failed", "err", err)
 		return domain.Tags{}, err
 	}
 	if resp.Results[0].Status != ua.StatusOK {
-		err := fmt.Errorf("bad node status: %v", resp.Results[0].Status)
-		c.logger.Warnw("OPC UA Node not found", "err", err)
-		return domain.Tags{}, err
+		return domain.Tags{}, fmt.Errorf("node read failed with status: %v", resp.Results[0].Status)
 	}
 	return domain.Tags{
 		Temperature: resp.Results[0].Value.Float(),
@@ -98,8 +94,5 @@ func NewMockPoller() *MockPoller                        { return &MockPoller{} }
 func (m *MockPoller) Connect(ctx context.Context) error { return nil }
 func (m *MockPoller) Close() error                      { return nil }
 func (m *MockPoller) Read(ctx context.Context) (domain.Tags, error) {
-	return domain.Tags{
-		Temperature: 400.0 + rand.Float64()*120,
-		Pressure:    55.0 + rand.Float64()*20,
-	}, nil
+	return domain.Tags{Temperature: 100, Pressure: 10}, nil
 }
